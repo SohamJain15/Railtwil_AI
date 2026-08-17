@@ -1,0 +1,16 @@
+{
+  "scenario_id": "vasai-freight-bottleneck-v1",
+  "name": "Freight movement causes a bottleneck at Vasai Road",
+  "is_synthetic": true,
+  "source_type": "synthetic_event",
+  "events": [{
+    "event_id": "freight-delay-001",
+    "timestamp": 600,
+    "target_type": "train",
+    "target_id": "T012",
+    "delay_seconds": 480,
+    "reason": "Synthetic freight movement delay at Vasai Road loop",
+    "severity": "HIGH",
+    "resource": "vasai_road"
+  }]
+}

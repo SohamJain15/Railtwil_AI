@@ -13,7 +13,7 @@ def load_and_validate():
     for row in timetable: row["scheduled_departure"] = pd.Timestamp(row["scheduled_departure"]); row["scheduled_arrival"] = pd.Timestamp(row["scheduled_arrival"])
     report = validate_seed(nodes, edges, platforms, trains, timetable)
     if not report.valid: raise ValueError("Seed validation failed: " + "; ".join(report.errors))
-    return {"nodes": nodes, "edges": edges, "platforms": platforms, "trains": trains, "timetable": timetable}
+    return {"nodes": nodes, "edges": edges, "platforms": platforms, "trains": trains, "timetable": timetable, "blocks": read_seed("blocks.csv"), "junctions": read_seed("junctions.csv"), "routes": read_seed("routes.csv"), "constraints": read_seed("operational_constraints.csv")}
 
 async def seed_database() -> bool:
     """Idempotently load the demo station namespace when PostGIS is available."""

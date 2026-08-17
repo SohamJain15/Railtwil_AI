@@ -1,4 +1,5 @@
 edge_id,from_node,to_node,length_m,nominal_speed_kmph,direction,track_type,is_electrified,capacity
+t_mmct_dadar,mumbai_central,dadar,4200,70,northbound,main_line,true,2
 t_cg_dadar,churchgate,dadar,8500,60,southbound,slow,true,2
 t_dadar_bandra,dadar,bandra,7600,70,southbound,slow,true,2
 t_bandra_andheri,bandra,andheri,9500,80,southbound,slow,true,2
