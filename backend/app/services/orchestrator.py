@@ -21,6 +21,8 @@ class SimulationOrchestrator:
     def pause_simulation(self): self.simulation.pause(); return self._emit("simulation.paused", {"state": self.simulation.state})
     def resume_simulation(self): self.simulation.resume(); return self._emit("simulation.resumed", {"state": self.simulation.state})
     def reset_simulation(self): self.simulation.reset(); return self._emit("simulation.reset", {"state": self.simulation.state})
+    def load_demo(self):
+        simulation_id=self.simulation.load_demo(); self._emit("scenario.started",{"scenario_id":"vasai-freight-bottleneck-v1","state":"ready"}); return simulation_id
     def inject_event(self, event: DelayEvent):
         self.simulation.add_event(event); emitted = self._emit("train.delayed", {"train_id":event.target_id,"delay_seconds":event.delay_seconds,"reason":event.reason})
         self.process_predictions(); self.detect_conflicts(); self.generate_recommendations(); return emitted

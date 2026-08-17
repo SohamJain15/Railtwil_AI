@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 import asyncio
 from datetime import datetime, timezone
 from dataclasses import asdict
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from uuid import UUID
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Response
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.data.seed import load_and_validate
 from app.data.store import read_seed, network_payload, active_scenario
 from app.db import database_health
-from app.schemas import StatusResponse, SimulationCommand, EventCommand, RecommendationDecision
+from app.schemas import StatusResponse, SimulationCommand, EventCommand, RecommendationDecision, ModeCommand, ValidationRunCommand
 from app.services.simulation import SimulationService
 from app.data.seed import seed_database
 from app.simulation.state import DelayEvent
@@ -17,8 +18,10 @@ from app.optimization import Action, WhatIfEngine, OptimizationEngine
 from app.prediction.service import PredictionService
 from app.simulation.engine import RailwaySimulation
 from app.services.orchestrator import SimulationOrchestrator
+from app.validation.runner import ValidationRunner
+from app.validation.models import SystemMode
 
-settings = get_settings(); simulation = SimulationService(); seed = load_and_validate(); conflict_detector = ConflictDetector(); prediction_service = PredictionService(); optimization = OptimizationEngine(WhatIfEngine(lambda: RailwaySimulation())); orchestrator = SimulationOrchestrator(simulation, prediction_service, optimization)
+settings = get_settings(); simulation = SimulationService(); seed = load_and_validate(); conflict_detector = ConflictDetector(); prediction_service = PredictionService(); optimization = OptimizationEngine(WhatIfEngine(lambda: RailwaySimulation())); orchestrator = SimulationOrchestrator(simulation, prediction_service, optimization); validation_runner = ValidationRunner(); validation_runner.listeners.append(lambda event: orchestrator.events.append(event))
 
 @asynccontextmanager
 async def lifespan(app):
@@ -33,6 +36,42 @@ async def health(): return {"status":"ok", "service":"backend", "database": awai
 
 @app.get("/api/v1/system/status", response_model=StatusResponse)
 async def status(): return StatusResponse(status=simulation.state, environment=settings.environment, scenario_id=settings.demo_scenario_id, persistence="postgresql", event_transport="redis")
+@app.get("/api/v1/system/mode")
+async def get_mode(): return {"mode":validation_runner.mode.value}
+@app.put("/api/v1/system/mode")
+async def set_mode(command: ModeCommand): return {"mode":validation_runner.set_mode(SystemMode(command.mode)).value}
+@app.post("/api/v1/demo/load")
+async def load_demo():
+    validation_runner.set_mode(SystemMode.DEMO); return {"simulation_id":orchestrator.load_demo(),"state":simulation.state}
+@app.post("/api/v1/demo/reset")
+async def reset_demo():
+    validation_runner.set_mode(SystemMode.DEMO); return {"simulation_id":orchestrator.load_demo(),"state":simulation.state}
+@app.post("/api/v1/validation/runs")
+async def start_validation(command: ValidationRunCommand | None = None):
+    validation_runner.set_mode(SystemMode.VALIDATION)
+    try: run=validation_runner.start(command.seeds if command else None,command.scenario_ids if command else None)
+    except ValueError as exc: raise HTTPException(422,str(exc))
+    return {"run_id":run.run_id,"status":run.status,"progress_total":run.progress_total}
+@app.get("/api/v1/validation/runs/{run_id}")
+async def get_validation(run_id: UUID):
+    run=validation_runner.get(run_id)
+    if not run: raise HTTPException(404,"Validation run not found")
+    return asdict(run)
+@app.get("/api/v1/validation/runs/{run_id}/results")
+async def validation_results(run_id: UUID):
+    run=validation_runner.get(run_id)
+    if not run: raise HTTPException(404,"Validation run not found")
+    return {"items":[asdict(item) for item in run.results]}
+@app.get("/api/v1/validation/runs/{run_id}/summary")
+async def validation_summary(run_id: UUID):
+    if not validation_runner.get(run_id): raise HTTPException(404,"Validation run not found")
+    return asdict(validation_runner.summary(run_id))
+@app.get("/api/v1/validation/runs/{run_id}/export")
+async def validation_export(run_id: UUID, format: str="json"):
+    if not validation_runner.get(run_id): raise HTTPException(404,"Validation run not found")
+    if format not in {"csv","json","markdown"}: raise HTTPException(422,"format must be csv, json, or markdown")
+    content,media_type=validation_runner.export(run_id,format); extension={"markdown":"md"}.get(format,format)
+    return Response(content=content,media_type=media_type,headers={"Content-Disposition":f'attachment; filename="validation-{run_id}.{extension}"'})
 @app.get("/api/v1/simulation/state")
 async def simulation_state():
     twin = simulation.twin
@@ -135,5 +174,5 @@ async def simulation_socket(websocket: WebSocket):
             elif action == "pause": orchestrator.pause_simulation()
             elif action == "resume": orchestrator.resume_simulation()
             elif action == "reset": orchestrator.reset_simulation()
-            await websocket.send_json({"type":"simulation.tick","simulation_id":str(simulation.simulation_id) if simulation.simulation_id else None,"simulation_time":simulation.twin.simulation_time if simulation.twin else 0,"state":simulation.state,"trains":{k:{"status":v.status,"node":v.current_node,"delay_seconds":v.delay_seconds} for k,v in (simulation.twin.trains.items() if simulation.twin else [])}})
+            await websocket.send_json({"type":"simulation.tick","simulation_id":str(simulation.simulation_id) if simulation.simulation_id else None,"simulation_time":simulation.twin.simulation_time if simulation.twin else 0,"state":simulation.state,"mode":validation_runner.mode.value,"events":orchestrator.events[-10:],"trains":{k:{"status":v.status,"node":v.current_node,"delay_seconds":v.delay_seconds} for k,v in (simulation.twin.trains.items() if simulation.twin else [])}})
     except WebSocketDisconnect: pass

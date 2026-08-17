@@ -24,6 +24,8 @@ class SimulationService:
     def pause(self): self._paused.set(); self.state = "paused"
     def resume(self): self._paused.clear(); self.state = "running"
     def reset(self): self._stop.set(); self._paused.clear(); self.state = "idle"; self.simulation_id = None; self.engine = None; self.snapshots = []
+    def load_demo(self):
+        self.reset(); self.simulation_id = uuid4(); self.engine = RailwaySimulation(); self.engine.state.simulation_id = self.simulation_id; self.state = "ready"; return self.simulation_id
     def set_speed(self, speed: int):
         if speed not in {1,5,10,20}: raise ValueError("speed must be 1, 5, 10, or 20")
         self.speed_multiplier = speed

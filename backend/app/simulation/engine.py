@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[3]
 
 class RailwaySimulation:
     """Deterministic SimPy engine. Wall-clock scheduling belongs to SimulationService."""
-    def __init__(self, seed: int = 2026, horizon_seconds: float = 7200, snapshot_interval: float = 60):
-        self.seed, self.horizon_seconds, self.snapshot_interval = seed, horizon_seconds, snapshot_interval
+    def __init__(self, seed: int = 2026, horizon_seconds: float = 7200, snapshot_interval: float = 60, scenario_events: list[dict] | None = None):
+        self.seed, self.horizon_seconds, self.snapshot_interval, self.input_scenario_events = seed, horizon_seconds, snapshot_interval, scenario_events
         self.env = simpy.Environment(); self.data = load_and_validate(); self.state = self._initial_state()
         self.resources: dict[str, simpy.Resource] = {}; self.platform_resources: dict[str, simpy.Resource] = {}
         self.junction_resources: dict[str, simpy.Resource] = {}; self.edge_by_pair: dict[tuple[str,str], dict] = {}
@@ -26,6 +26,21 @@ class RailwaySimulation:
         state = DigitalTwinState()
         for p in self.data["platforms"]: state.platforms[p["platform_id"]] = {**p, "occupied_by": None, "occupancy_seconds": 0}
         for b in self.data["blocks"]: state.blocks[b["block_id"]] = {**b, "occupied_by": None}
+        # Every traversable edge is a lockable track resource.  Some seeded
+        # engineering blocks group an edge under a different identifier, while
+        # the remaining prototype edges use their edge identifier directly.
+        # Keeping all of them in state makes utilization denominators complete.
+        for edge in edges:
+            seeded = next((block for block in self.data["blocks"] if block["track_id"] == edge["edge_id"]), None)
+            block_id = seeded["block_id"] if seeded else edge["edge_id"]
+            state.blocks.setdefault(block_id, {
+                "block_id": block_id,
+                "track_id": edge["edge_id"],
+                "capacity": int(edge["capacity"]),
+                "occupied_by": None,
+                "provenance": edge.get("provenance", "synthetic prototype topology"),
+            })
+            state.blocks[block_id].setdefault("capacity", int(edge["capacity"]))
         for j in self.data["junctions"]: state.junctions[j["junction_id"]] = {**j, "occupied_by": None}
         route_by_type = {"FREIGHT":"freight_bypass", "MEMUPASSENGER":"vasai_diva", "EXPRESS":"western_fast"}
         for t in self.data["trains"]:
@@ -82,7 +97,7 @@ class RailwaySimulation:
                 yield request
                 junction_request = junction_resource.request() if junction_resource else None
                 if junction_request:
-                    junction_wait_start = self.env.now; yield junction_request
+                    junction_wait_start = self.env.now; yield junction_request; junction_occupancy_start = self.env.now
                     if self.env.now > junction_wait_start: train.breakdown.junction_wait_delay += self.env.now - junction_wait_start
                 wait = self.env.now - request_time
                 if wait > 0: train.breakdown.block_wait_delay += wait
@@ -90,7 +105,8 @@ class RailwaySimulation:
                 speed = max(20.0, train.speed_kmph); travel = float(edge["length_m"]) / (speed * 1000 / 3600)
                 train.position_m = 0; yield self.env.timeout(travel); train.position_m = float(edge["length_m"]); train.occupancy_end = self.env.now
                 self.state.occupancies.append(OccupancyInterval(block_id, train.train_id, train.occupancy_start, train.occupancy_end, "block"))
-                if junction_request: junction_resource.release(junction_request)
+                if junction_request:
+                    self.state.occupancies.append(OccupancyInterval("j_vasai_station", train.train_id, junction_occupancy_start, self.env.now, "junction")); junction_resource.release(junction_request)
             train.current_node = b; train.current_block = None; train.position_m = 0; train.status = TrainStatus.ARRIVING
             platform = self._platform_for(train) if b == "vasai_road" else None
             if platform and platform in self.platform_resources:
@@ -111,6 +127,8 @@ class RailwaySimulation:
             self.apply_delay_event(event)
 
     def _scenario_events(self):
+        if self.input_scenario_events is not None:
+            return [DelayEvent(timestamp=e["timestamp"], target_type=e.get("target_type","train"), target_id=e.get("target_id",""), delay_seconds=e.get("delay_seconds",0), reason=e.get("reason",e.get("event_type","scenario event")), severity=e.get("severity","MEDIUM"), scenario_id=e.get("scenario_id","validation")) for e in self.input_scenario_events if e.get("event_type","TRAIN_DELAY") in {"TRAIN_DELAY","COMBINED_DELAY"}]
         path = ROOT / "data" / "scenarios" / "scenario_vasai_freight_bottleneck.json"
         raw = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"events":[]}
         return [DelayEvent(timestamp=e["timestamp"], target_type=e["target_type"], target_id=e["target_id"], delay_seconds=e["delay_seconds"], reason=e["reason"], severity=e["severity"], scenario_id=raw.get("scenario_id","")) for e in raw.get("events",[])]
@@ -156,7 +174,8 @@ class RailwaySimulation:
         ConflictDetector().detect(self.state)
         completed = sum(t.status == TrainStatus.COMPLETED for t in self.state.trains.values())
         total_delay = sum(t.delay_seconds for t in self.state.trains.values()) / 60
-        metrics = MetricSnapshot(self.env.now, total_delay, len(self.state.active_conflicts), 0, completed / max(self.env.now / 3600, 1/3600), 0, 0, 0, 0)
+        from app.simulation.metrics import calculate_metrics
+        measured = calculate_metrics(self.state, max(self.env.now, 1)); metrics = MetricSnapshot(self.env.now, measured["total_delay_minutes"], measured["number_of_conflicts"], 0, measured["throughput_trains_per_hour"], measured["platform_utilization"], measured["track_utilization"], measured["junction_utilization"], measured["average_headway_seconds"], measured["prediction_error_seconds"])
         snapshot = SimulationSnapshot(self.env.now, deepcopy(self.state.trains), list(self.state.occupancies), list(self.state.active_conflicts), metrics); self.state.snapshots.append(snapshot)
         for callback in self.callbacks: callback(snapshot)
 

@@ -44,6 +44,18 @@ python -m app.prediction.train --episodes 1667 --seed 2026
 
 The scenario is `data/scenarios/scenario_vasai_freight_bottleneck.json`. Its +480-second freight event is synthetic; downstream delays are calculated by the simulation and propagation engine.
 
+## Validation evidence
+
+Switch the dashboard to Validation mode or start a background evidence run through the API:
+
+```powershell
+$run = Invoke-RestMethod -Method Post http://localhost:8000/api/v1/validation/runs -ContentType application/json -Body '{}'
+Invoke-RestMethod "http://localhost:8000/api/v1/validation/runs/$($run.run_id)/summary"
+Invoke-WebRequest "http://localhost:8000/api/v1/validation/runs/$($run.run_id)/export?format=markdown" -OutFile validation-report.md
+```
+
+The default suite runs seven controlled scenarios with seeds 2026–2035 against no intervention, a priority-aware minimum-safe-hold rule, and Rail-Twin. Results include failures and unsafe/no-solution outcomes. Evidence demonstrates controlled simulation behavior only and is not a claim of real railway deployment readiness.
+
 ## Structure
 
 - `backend/app`: FastAPI API, schemas, persistence, adapters, graph, validation, simulation lifecycle

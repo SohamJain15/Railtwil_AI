@@ -17,4 +17,6 @@ class ModelRegistry:
     def load(self, name):
         records = [r for r in self.list() if r["model_name"] == name]
         if not records: return None, None
-        record = records[-1]; return joblib.load(record["artifact_path"]), record
+        record = records[-1]; path=Path(record["artifact_path"])
+        if not path.exists(): path=ARTIFACTS / path.name
+        return joblib.load(path), record

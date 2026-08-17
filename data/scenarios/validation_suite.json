@@ -1,0 +1,14 @@
+{
+  "suite_id": "vasai-validation-v1",
+  "version": "1.0.0",
+  "is_synthetic": true,
+  "scenarios": [
+    {"scenario_id":"freight-delay-5m","name":"Freight delay +5 minutes","event_type":"TRAIN_DELAY","timestamp":600,"target_id":"T012","delay_seconds":300,"severity":"MEDIUM"},
+    {"scenario_id":"freight-delay-8m","name":"Freight delay +8 minutes","event_type":"TRAIN_DELAY","timestamp":600,"target_id":"T012","delay_seconds":480,"severity":"HIGH"},
+    {"scenario_id":"freight-delay-12m","name":"Freight delay +12 minutes","event_type":"TRAIN_DELAY","timestamp":600,"target_id":"T012","delay_seconds":720,"severity":"HIGH"},
+    {"scenario_id":"platform-unavailable","name":"Platform unavailable","event_type":"PLATFORM_UNAVAILABLE","timestamp":1200,"target_id":"vasai_p4","duration_seconds":600,"severity":"HIGH"},
+    {"scenario_id":"junction-restriction","name":"Junction restriction","event_type":"JUNCTION_RESTRICTION","timestamp":900,"target_id":"j_vasai_station","duration_seconds":480,"severity":"HIGH"},
+    {"scenario_id":"speed-restriction","name":"Speed restriction","event_type":"SPEED_RESTRICTION","timestamp":600,"target_id":"T008","speed_kmph":30,"duration_seconds":900,"severity":"MEDIUM"},
+    {"scenario_id":"combined-delay","name":"Combined freight and junction disruption","event_type":"COMBINED_DELAY","timestamp":600,"target_id":"T012","delay_seconds":480,"junction_id":"j_vasai_station","duration_seconds":600,"severity":"CRITICAL"}
+  ]
+}

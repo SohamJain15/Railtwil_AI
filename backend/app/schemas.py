@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
 
 class SourceType(str, Enum):
     timetable = "timetable"; infrastructure = "infrastructure"; movement = "movement"
@@ -67,3 +68,10 @@ class EventCommand(BaseModel):
 class RecommendationDecision(BaseModel):
     reason: str = Field(min_length=1, max_length=1000)
     modified_action: str | None = None
+
+class ModeCommand(BaseModel):
+    mode: Literal["DEMO","VALIDATION"]
+
+class ValidationRunCommand(BaseModel):
+    seeds: list[int] | None = None
+    scenario_ids: list[str] | None = None
