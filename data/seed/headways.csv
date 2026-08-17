@@ -1,0 +1,5 @@
+constraint_id,route_type,minimum_headway_seconds
+slow,passenger,120
+fast,passenger,180
+main_line,main_line,240
+freight,freight,300

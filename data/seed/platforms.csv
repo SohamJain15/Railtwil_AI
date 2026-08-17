@@ -1,0 +1,8 @@
+platform_id,station_id,platform_number,length_m,allowed_train_types,capacity
+vasai_p1,vasai_road,1,270,"SUBURBAN",1
+vasai_p2,vasai_road,2A/2B,270,"SUBURBAN",1
+vasai_p3,vasai_road,3,270,"SUBURBAN",1
+vasai_p4,vasai_road,4,520,"SUBURBAN|EXPRESS",1
+vasai_p5,vasai_road,5,520,"SUBURBAN|EXPRESS",1
+vasai_p6,vasai_road,6,520,"PASSENGER|EXPRESS|FREIGHT",1
+vasai_p7,vasai_road,7,520,"PASSENGER|EXPRESS|FREIGHT",1

@@ -1,0 +1,6 @@
+block_id,track_id,entry_node,exit_node,minimum_occupancy_seconds,safe_headway_seconds
+b_vasai_virar,t_vasai_nalla,vasai_road,nalla_sopara,90,180
+b_nalla_virar,t_nalla_virar,nalla_sopara,virar,90,180
+b_vasai_yard,t_vasai_yard,vasai_road,freight_yard_north,120,300
+b_vasai_diva,t_vasai_diva,vasai_road,vasai_diva_junction,120,240
+b_freight_loop,t_loop,vasai_road,loop_freight,60,180

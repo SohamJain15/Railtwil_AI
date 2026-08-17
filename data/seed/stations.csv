@@ -1,0 +1,13 @@
+station_id,station_code,name,latitude,longitude,zone,station_type
+churchgate,CCG,Churchgate,18.9322,72.8264,Western,terminal
+mumbai_central,MMCT,Mumbai Central,18.9696,72.8194,Western,junction
+dadar,DDR,Dadar,19.0183,72.8438,Western,junction
+bandra,BDTS,Bandra,19.0544,72.8406,Western,suburban
+andheri,ADH,Andheri,19.1197,72.8468,Western,junction
+borivali,BVI,Borivali,19.2290,72.8574,Western,junction
+dahisar,BSR,Dahisar,19.2500,72.8590,Western,suburban
+mira_road,MIRA,Mira Road,19.2813,72.8729,Western,suburban
+bhayandar,BYR,Bhayandar,19.3016,72.8515,Western,suburban
+vasai_road,BSR,Vasai Road,19.3815,72.8328,Western,junction
+nalla_sopara,NSP,Nalla Sopara,19.4160,72.8190,Western,suburban
+virar,VR,Virar,19.4559,72.8114,Western,terminal

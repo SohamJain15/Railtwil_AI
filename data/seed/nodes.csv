@@ -1,0 +1,24 @@
+node_id,node_type,name,latitude,longitude
+churchgate,station,Churchgate,18.9322,72.8264
+mumbai_central,station,Mumbai Central,18.9696,72.8194
+dadar,station,Dadar,19.0183,72.8438
+bandra,station,Bandra,19.0544,72.8406
+andheri,station,Andheri,19.1197,72.8468
+borivali,station,Borivali,19.2290,72.8574
+dahisar,station,Dahisar,19.2500,72.8590
+mira_road,station,Mira Road,19.2813,72.8729
+bhayandar,station,Bhayandar,19.3016,72.8515
+vasai_road,station,Vasai Road,19.3815,72.8328
+nalla_sopara,station,Nalla Sopara,19.4160,72.8190
+virar,station,Virar,19.4559,72.8114
+freight_yard_north,yard,Northern Freight Yard,19.4300,72.8200
+vasai_diva_junction,junction,Vasai-Diva Junction,19.3860,72.8500
+diva,junction,Diva Junction,19.1914,73.0487
+platform_1,platform,Vasai Road Platform 1,19.3815,72.8328
+platform_2,platform,Vasai Road Platform 2,19.3815,72.8328
+platform_3,platform,Vasai Road Platform 3,19.3815,72.8328
+platform_4,platform,Vasai Road Platform 4,19.3815,72.8328
+platform_5,platform,Vasai Road Platform 5,19.3815,72.8328
+loop_freight,block,Freight Loop,19.3815,72.8328
+platform_6,platform,Vasai Road Platform 6,19.3815,72.8328
+platform_7,platform,Vasai Road Platform 7,19.3815,72.8328

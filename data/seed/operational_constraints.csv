@@ -1,0 +1,2 @@
+constraint_id,minimum_headway,minimum_platform_dwell,junction_clearance,minimum_route_separation,maximum_allowed_platform_occupancy,maximum_train_speed,maximum_delay_for_priority_class
+default,120,30,90,120,1,110,900

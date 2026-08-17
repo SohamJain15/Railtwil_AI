@@ -1,0 +1,5 @@
+route_id,name,origin,destination,route_type,platform_group
+western_slow,Western slow corridor,churchgate,virar,passenger,2-3
+western_fast,Western fast corridor,mumbai_central,virar,passenger,4-5
+vasai_diva, Vasai-Diva corridor,vasai_road,diva,main_line,6-7
+freight_bypass,Northern freight bypass,vasai_road,virar,freight,loop

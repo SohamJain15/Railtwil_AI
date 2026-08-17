@@ -1,0 +1,3 @@
+junction_id,node_id,conflicting_routes,minimum_clearance_seconds
+j_vasai,vasai_diva_junction,"vasai-diva|mainline-south",120
+j_vasai_station,vasai_road,"slow|fast|freight-loop|vasai-diva",90
